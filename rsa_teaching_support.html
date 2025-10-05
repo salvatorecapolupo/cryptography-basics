@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Risolvi RSA Online - Crittografia asimmetrica Interattiva</title>
+  <!-- Bootstrap 4.6 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    :root{--accent:#1f6feb}
+    body{padding:1rem;background:linear-gradient(180deg,#f7f9fc,#ffffff)}
+    .card{box-shadow:0 6px 18px rgba(20,30,60,0.06)}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace}
+    .small-step{font-size:0.95rem}
+    @media (max-width:767px){.flex-lg-row{flex-direction:column}}
+  </style>
+</head>
+<body>
+<div class="container">
+
+<h1>>Algoritmo RSA per la crittografia - Online Solver</h1>
+<h2>(Ron <strong>R</strong>ivest,Adi <strong>S</strong>hamir,Leonard <strong>A</strong>dleman)</h2>
+
+<p>RSA è un metodo crittografico a chiave pubblica che si basa sulla difficoltà di scomporre 
+un numero grande nel prodotto dei suoi due fattori primi, 
+permettendo di cifrare e decifrare dati usando due chiavi diverse ma matematicamente legate.</p>
+
+  <div class="d-flex align-items-center mb-3">
+    <h1 class="h4 mb-0 mr-3">Procedimento per il calcolo</h1>
+    <small class="text-muted">Genera p, q; calcola n, φ(n), e, d; cifra/decifra e visualizza i passaggi</small>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-5">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Parametri (editabili)</h5>
+
+          <div class="form-group">
+            <label for="p">p (primo)</label>
+            <div class="input-group">
+              <input id="p" class="form-control mono" value="5">
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary" id="randP">Casuale</button>
+              </div>
+            </div>
+            <small class="form-text text-muted">Inserisci un primo (es. 3,5,7,11...) — oppure genera random.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="q">q (primo)</label>
+            <div class="input-group">
+              <input id="q" class="form-control mono" value="11">
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary" id="randQ">Casuale</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="n">n = p·q</label>
+              <input id="n" class="form-control mono" readonly>
+            </div>
+            <div class="form-group col-6">
+              <label for="phi">φ(n) = (p-1)(q-1)</label>
+              <input id="phi" class="form-control mono" readonly>
+            </div>
+          </div>
+
+          <div class="form-row align-items-end">
+            <div class="form-group col-5">
+              <label for="e">e (esponente pubblico)</label>
+              <input id="e" class="form-control mono" value="3">
+            </div>
+            <div class="form-group col-7">
+              <button class="btn btn-primary mb-2" id="chooseE">Scegli e valida</button>
+              <small class="form-text text-muted">Trova un e coprimo con φ(n).</small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="d">d (esponente privato)</label>
+              <input id="d" class="form-control mono" readonly>
+            </div>
+            <div class="form-group col-6">
+              <button class="btn btn-outline-success" id="calcD">Calcola d (inverso mod φ)</button>
+            </div>
+          </div>
+
+          <div class="mt-2">
+            <button class="btn btn-secondary" id="apply">Applica</button>
+            <button class="btn btn-outline-danger" id="reset">Reset</button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Cifratura / Decifratura</h5>
+          <div class="form-group">
+            <label for="M">Messaggio M (deve essere un numero M con 0 &lt; M &lt; n)</label>
+            <input id="M" class="form-control mono" value="7">
+          </div>
+          <div class="d-flex mb-2">
+            <button class="btn btn-primary mr-2" id="encrypt">Vuoi cifrare? Usa (C = M<sup>e</sup> mod n)</button>
+            <button class="btn btn-warning" id="decrypt">Vuoi decifrare? Usa (M = C<sup>d</sup> mod n)</button>
+          </div>
+          <div class="form-group">
+            <label for="C">Risultato C</label>
+            <input id="C" class="form-control mono" readonly>
+          </div>
+          <small class="text-muted">
+            Nota: a scopo didattico è bene usare numeri interi non troppo grandi. 
+          </small>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body small-step">
+          <h6>Algoritmo RSA</h6>
+          <ol>
+            <li>Scegli due interi <strong>primi</strong> p, q arbitrari, diversi tra loro.</li>
+            <li>Calcola n = p·q e φ(n) = (p-1)(q-1).</li>
+            <li>Scegli esponente e tale che 1 &lt; e &lt; φ(n), e gcd(e,φ)=1.</li>
+            <li>Trova una d tale che d·e ≡ 1 (mod φ(n)), o se preferisci (... immagino che lo preferisci :-) ) 
+              risolvi l'equazione parametrica: d·e = φ(n)·k +1 </li>
+            <li>Cifra il messaggio M usando la formula: C ≡ M<sup>e</sup> (mod n)</li>
+            <li>Decifra e torna al messaggio originale con: M ≡ C<sup>d</sup> (mod n).</li>
+          </ol>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Grafici</h5>
+          <p class="text-muted">Visualizza la congruenza e l'esponenziazione modulare.</p>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <canvas id="chartMultiples" height="220"></canvas>
+            </div>
+            <div class="col-md-6 mb-3">
+              <canvas id="chartExp" height="220"></canvas>
+            </div>
+          </div>
+          <div class="mt-2 small text-muted">
+            Il primo grafico mostra i multipli di φ(n) 
+            e i valori di e·d per vedere la congruenza (resto 1). 
+            Il secondo mostra i passaggi di riduzione in M<sup>e</sup> mod n.</div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body mono small-step" id="steps">
+          <h5 class="card-title">Passaggi dettagliati</h5>
+          <div id="stepContent">Clicca su <strong>Applica</strong> o genera p/q per vedere i passaggi.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="text-center text-muted mt-4 mb-4"> 5 ottobre 2025 - Versione Alpha - Realizzato dal <a href="https://salvatorecapolupo.github.io/about-me/">prof. Salvatore Capolupo</a> - Questo software è libero, open source, gratuito. </footer>
+</div>
+
+<script>
+// ---------------- Utility matematiche ----------------
+function isPrime(n){
+  n = Math.floor(n);
+  if(n<2) return false;
+  if(n%2===0) return n===2;
+  for(let i=3;i*i<=n;i+=2) if(n%i===0) return false;
+  return true;
+}
+
+function randPrime(min=3,max=97){
+  const primes=[];
+  for(let i=min;i<=max;i++) if(isPrime(i)) primes.push(i);
+  return primes[Math.floor(Math.random()*primes.length)];
+}
+
+function egcd(a,b){
+  // extended gcd returning {g,x,y} for ax+by=g
+  if(b===0) return {g:a,x:1,y:0};
+  let s=0,old_s=1; let t=1,old_t=0; let r=b,old_r=a;
+  while(r!==0){
+    const q=Math.floor(old_r/r);
+    [old_r,r]=[r,old_r-q*r];
+    [old_s,s]=[s,old_s-q*s];
+    [old_t,t]=[t,old_t-q*t];
+  }
+  return {g:old_r,x:old_s,y:old_t};
+}
+
+function modInv(a,m){
+  const res=egcd(a,m);
+  if(res.g!==1) return null; // no inverse
+  let inv = res.x % m;
+  if(inv<0) inv += Math.abs(m);
+  return inv;
+}
+
+function gcd(a,b){
+  a=Math.abs(a);b=Math.abs(b);
+  while(b){[a,b]=[b,a%b]}
+  return a;
+}
+
+function modPow(base,exp,mod){
+  // modular exponentiation, returns {value, steps}
+  base = ((base%mod)+mod)%mod;
+  let result=1n;
+  let b=BigInt(base);
+  let e=BigInt(exp);
+  let m=BigInt(mod);
+  const steps=[];
+  while(e>0n){
+    steps.push({e: e.toString(), cur: Number(result) % Number(m)});
+    if(e%2n===1n) result = (result*b) % m;
+    b = (b*b) % m;
+    e = e/2n;
+  }
+  steps.push({e: '0', cur: Number(result) % Number(m)});
+  return {value: Number(result % m), steps};
+}
+
+// ---------------- DOM & interazioni ----------------
+const pIn=document.getElementById('p');
+const qIn=document.getElementById('q');
+const nIn=document.getElementById('n');
+const phiIn=document.getElementById('phi');
+const eIn=document.getElementById('e');
+const dIn=document.getElementById('d');
+const MIn=document.getElementById('M');
+const CIn=document.getElementById('C');
+const stepContent=document.getElementById('stepContent');
+
+const randP=document.getElementById('randP');
+const randQ=document.getElementById('randQ');
+const calcD=document.getElementById('calcD');
+const applyBtn=document.getElementById('apply');
+const chooseE=document.getElementById('chooseE');
+const encryptBtn=document.getElementById('encrypt');
+const decryptBtn=document.getElementById('decrypt');
+const resetBtn=document.getElementById('reset');
+
+randP.addEventListener('click',()=>{pIn.value = randPrime(3,97);});
+randQ.addEventListener('click',()=>{qIn.value = randPrime(3,97);});
+
+function computeBasic(){
+  const p=Number(pIn.value), q=Number(qIn.value);
+  if(!isPrime(p) || !isPrime(q)){
+    nIn.value='Errore: p/q non sono primi';
+    phiIn.value='—';
+    return null;
+  }
+  const n = p*q; const phi=(p-1)*(q-1);
+  nIn.value = n; phiIn.value = phi;
+  return {p,q,n,phi};
+}
+
+chooseE.addEventListener('click',()=>{
+  const basic = computeBasic(); if(!basic) return;
+  const {phi} = basic;
+  // pick a small e that is coprime
+  for(let candidate=3; candidate<phi; candidate+=2){
+    if(gcd(candidate,phi)===1){ eIn.value = candidate; break; }
+  }
+});
+
+calcD.addEventListener('click',()=>{
+  const basic = computeBasic(); if(!basic) return;
+  const {phi} = basic; const e=Number(eIn.value);
+  const inv = modInv(e,phi);
+  dIn.value = (inv===null)? 'Nessun inverso (gcd!=1)' : inv;
+});
+
+applyBtn.addEventListener('click',()=>{
+  const basic = computeBasic(); if(!basic) return;
+  const {p,q,n,phi} = basic; const e=Number(eIn.value);
+  const inv = modInv(e,phi);
+  dIn.value = inv===null? '—' : inv;
+  renderSteps(p,q,n,phi,e,inv);
+  updateCharts(n,phi,e,inv);
+});
+
+encryptBtn.addEventListener('click',()=>{
+  const n = Number(nIn.value), e = Number(eIn.value);
+  const M = Number(MIn.value);
+  if(!Number.isInteger(M) || M<0 || M>=n){ alert('M deve essere intero con 0 ≤ M < n'); return; }
+  const res = modPow(M,e,n);
+  CIn.value = res.value;
+  showExpSteps(res.steps, 'Cifratura (riduzioni intermedie)');
+});
+
+decryptBtn.addEventListener('click',()=>{
+  const n = Number(nIn.value), d = Number(dIn.value);
+  const C = Number(CIn.value);
+  if(!Number.isInteger(C) || C<0 || C>=n){ alert('C deve essere intero con 0 ≤ C < n'); return; }
+  const res = modPow(C,d,n);
+  MIn.value = res.value;
+  showExpSteps(res.steps, 'Decifratura (riduzioni intermedie)');
+});
+
+resetBtn.addEventListener('click',()=>{
+  pIn.value=5; qIn.value=11; eIn.value=3; MIn.value=7; CIn.value=''; dIn.value=''; nIn.value=''; phiIn.value=''; stepContent.innerHTML='Premi <strong>Applica parametri</strong>.';
+  clearCharts();
+});
+
+// ---------------- Steps & explanations ----------------
+function renderSteps(p,q,n,phi,e,d){
+  let html = `<p><strong>Scelti:</strong> p=${p}, q=${q} → n=${n}, φ(n)=${phi}</p>`;
+  html += `<p><strong>Controllo primalità:</strong> p primo? ${isPrime(p)} — q primo? ${isPrime(q)}</p>`;
+  html += `<p><strong>Scegli e</strong>: ${e} — gcd(e,φ)=${gcd(e,phi)}</p>`;
+  if(d==null) html += `<p class="text-danger"><strong>d non esiste</strong> perché e e φ non sono coprimi.</p>`;
+  else html += `<p><strong>d</strong> (inverso moltiplicativo): ${d} — controlla: (d·e) mod φ = ${(d*e)%phi}</p>`;
+
+  html += `<hr><p><strong>Intuizione per la classe:</strong></p>`;
+  html += `<ol><li>La condizione d·e ≡ 1 (mod φ) significa che d·e - 1 è un multiplo di φ.</li>`;
+  html += `<li>Questo equivale a cercare k tale che d = (φk + 1)/e sia intero. Prova k=1,2,3... (esempio mostrato sotto).</li></ol>`;
+
+  html += `<h6>Esempio di ricerca lineare di d</h6><pre class="p-2 bg-light">`;
+  for(let k=1;k<=8;k++){
+    const num = phi*k+1; const maybe = num / e;
+    html += `k=${k}: (φ·k + 1) = ${num} → d = ${num}/${e} = ${maybe}` + (Number.isInteger(maybe) ? '  ✅ intero' : '  ❌ non intero') + '\n';
+  }
+  html += `</pre>`;
+
+  stepContent.innerHTML = html;
+}
+
+function showExpSteps(steps,title){
+  let html = `<h6>${title}</h6><pre class="p-2 bg-light">`;
+  // steps contains e as string and cur showing intermediate result (approx)
+  // We will pretty print reduced info
+  html += `Passaggi (valore intermedio di result dopo ogni bit dell'esponente)
+`;
+  steps.forEach((s,i)=>{
+    html += `step ${i}: e=${s.e} → result (mod n) = ${s.cur}
+`;
+  });
+  html += `</pre>`;
+  stepContent.innerHTML = html;
+}
+
+// ---------------- Charts ----------------
+let chartMultiples=null, chartExp=null;
+function clearCharts(){ if(chartMultiples) chartMultiples.destroy(); if(chartExp) chartExp.destroy(); }
+
+function updateCharts(n,phi,e,d){
+  // Chart 1: multiples of phi and the value e*d
+  const labels = [];
+  const multiples = [];
+  for(let k=0;k<=10;k++){ labels.push('k='+k); multiples.push(k*phi); }
+  const ed = (d==null)? null : d*e;
+
+  const ctx1 = document.getElementById('chartMultiples').getContext('2d');
+  if(chartMultiples) chartMultiples.destroy();
+  chartMultiples = new Chart(ctx1,{
+    type:'bar', data:{labels, datasets:[
+      {label:'multipli di φ(n)', data:multiples, backgroundColor:'rgba(0,123,255,0.4)'},
+      {label:'e·d', data: labels.map((l,i)=> i===0? null : (ed && i===Math.min(10,Math.round(ed/phi))? ed : null) ), type:'line', fill:false, borderWidth:2}
+    ]}, options:{plugins:{legend:{display:true}}, scales:{y:{beginAtZero:true}}}
+  });
+
+  // Chart 2: modular exponentiation path for M^e mod n
+  const M = Number(MIn.value) || 2;
+  const powSteps = [];
+  // simulate binary squaring to show intermediate b values
+  let b = M % n; let eTemp = Number(e);
+  while(eTemp>0){ powSteps.push(b); b = (b*b)%n; eTemp = Math.floor(eTemp/2); }
+  const labels2 = powSteps.map((v,i)=>'step'+i);
+  const ctx2 = document.getElementById('chartExp').getContext('2d');
+  if(chartExp) chartExp.destroy();
+  chartExp = new Chart(ctx2,{type:'line', data:{labels:labels2, datasets:[{label:`valori di squaring (mod ${n})`,data:powSteps, tension:0.2}]}, options:{plugins:{legend:{display:true}}, scales:{y:{beginAtZero:true}}}});
+}
+
+// initialize with defaults
+computeBasic(); updateCharts(55,40,3,27);
+renderSteps(5,11,55,40,3,27);
+
+</script>
+</body>
+</html>
