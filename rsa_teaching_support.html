@@ -322,7 +322,7 @@ function renderSteps(p,q,n,phi,e,d){
   if(d==null) html += `<p class="text-danger"><strong>d non esiste</strong> perché e e φ non sono coprimi.</p>`;
   else html += `<p><strong>d</strong> (inverso moltiplicativo): ${d} — controlla: (d·e) mod φ = ${(d*e)%phi}</p>`;
 
-  html += `<hr><p><strong>Intuizione per la classe:</strong></p>`;
+  html += `<hr><p><strong>Nota</strong></p>`;
   html += `<ol><li>La condizione d·e ≡ 1 (mod φ) significa che d·e - 1 è un multiplo di φ.</li>`;
   html += `<li>Questo equivale a cercare k tale che d = (φk + 1)/e sia intero. Prova k=1,2,3... (esempio mostrato sotto).</li></ol>`;
 
